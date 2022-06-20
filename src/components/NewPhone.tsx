@@ -24,21 +24,58 @@ const NewPhone: React.FC<PropsI> = ({
   selectedPhone,
   editPhone,
 }) => {
+  const [nameError, setNameError] = React.useState('');
+  const [numberError, setNumberError] = React.useState('');
   const navigate = useNavigate();
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
     const data = new FormData(event.currentTarget);
     const formData = {
       name: data.get('name') as string,
       number: data.get('number') as string,
     } as PhoneI;
 
+    // names length
+    if (formData.name.length > 10) {
+      setNameError('Names cannot be more than 10 words');
+      return;
+    }
+
+    // nullability name and number
     if (!formData.name || !formData.number) {
       if (setOpen) {
         setOpen('Please fill in all details');
         return;
       }
     }
+
+    // names format/letters
+    const splittedName = formData.name.split(' ');
+    const allFirstLetterCapslock = splittedName.every((name) => {
+      return /[A-Z]+/.test(name);
+    });
+
+    if (!allFirstLetterCapslock) {
+      setNameError('All letters need to be uppercase');
+      return;
+    }
+
+    // validate phone numbers with - at 4th digit
+    const numbers = formData.number;
+    const splittedNumbers = numbers.split('-');
+
+    const dashIndex = numbers.indexOf('-');
+    console.log({ dashIndex, splittedNumbers });
+    if (dashIndex !== 3 || splittedNumbers.length !== 2) {
+      setNumberError('Wrong number format');
+      return;
+    }
+
+    // if (splittedNumbers.length !== 2) {
+    //   setNameError('Wrong number format');
+    //   return;
+    // }
 
     if (addPhone) {
       addPhone(formData);
@@ -83,6 +120,7 @@ const NewPhone: React.FC<PropsI> = ({
               autoFocus
               defaultValue={selectedPhone?.name}
             />
+            {nameError && <span style={{ color: 'red' }}>{nameError}</span>}
             <TextField
               margin="normal"
               required
@@ -94,6 +132,7 @@ const NewPhone: React.FC<PropsI> = ({
               autoComplete="phone"
               defaultValue={selectedPhone?.number}
             />
+            {numberError && <span style={{ color: 'red' }}>{numberError}</span>}
             <Button
               type="submit"
               fullWidth
